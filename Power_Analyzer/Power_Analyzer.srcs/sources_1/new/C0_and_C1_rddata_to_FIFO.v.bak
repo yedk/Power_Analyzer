@@ -1,0 +1,147 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: HXS
+// 
+// Create Date: 2018/07/05 10:19:34
+// Design Name: 
+// Module Name: C0_and_C1_rddata_to_FIFO
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module C0_and_C1_rddata_to_FIFO(    
+
+           input c1_ui_clk,         
+           input c0_ui_clk,  
+           input rst_n,               
+           input clk_100M,     
+           //下行fifo要存取的数据有效位和数据流       
+           input c0_app_rd_data_valid,
+           input c1_app_rd_data_valid,
+           input [31:0]c0_app_rd_data ,
+           input [31:0]c1_app_rd_data,     
+           
+          input ddr3_rd_en,
+                                                     
+          input fenliu_stream_flag ,
+          output DDR3_fifo_valid,
+          output DDR3_fifo_empty,
+          output c0_c1_fifo_prog_full,
+          output [127:0]    app_rd_data_to_pcie
+         
+
+    );
+    
+     wire wr_en;
+     wire [31:0]din;
+     //wire [7 : 0] prog_empty_thresh;
+  //   wire [9 : 0] prog_full_thresh;
+     wire [127 : 0] app_rd_data_to_pcie;
+     wire [7 : 0] rd_data_count;
+     wire [9 : 0] wr_data_count;
+     wire prog_full;  
+     wire valid_DDR3_downfifo;    
+     wire full;   
+     wire empty; 
+     
+     //输入到PCIe的FIFO控制逻辑
+     assign DDR3_fifo_valid =  valid_DDR3_downfifo;
+     assign DDR3_fifo_empty = empty;
+    
+    parameter prog_full_thresh = 10'd900;
+    parameter prog_empty_thresh = 8'd0;
+    
+read_twoddr3_fifo read_twoddr3_fifo (
+      .rst(!rst_n),                              // input wire rst
+      .wr_clk(wr_clk),                        // input wire wr_clk:200M时钟
+      .rd_clk(clk_100M),                        // input wire rd_clk   
+      .din(din),                              // input wire [31 : 0] din
+      .wr_en(wr_en),                          // input wire wr_en
+      .rd_en(rd_en),                          // input wire rd_en
+      .prog_empty_thresh(prog_empty_thresh),  // input wire [7 : 0] prog_empty_thresh
+      .prog_full_thresh(prog_full_thresh),    // input wire [9 : 0] prog_full_thresh
+      .dout(app_rd_data_to_pcie),                            // output wire [127 : 0] dout
+      .full(full),                            // output wire full
+      .wr_ack(),                        // output wire wr_ack
+      .empty(empty),                          // output wire empty
+      .valid(valid_DDR3_downfifo),                          // output wire valid
+      .rd_data_count(rd_data_count),          // output wire [7 : 0] rd_data_count
+      .wr_data_count(wr_data_count),          // output wire [9 : 0] wr_data_count
+    //  .prog_full(prog_full),                  // output wire prog_full
+    .prog_full(c0_c1_fifo_prog_full),
+     .prog_empty()                // output wire prog_empty
+);
+    
+ // assign      wr_clk = (fenliu_stream_flag==1)? c1_ui_clk:c0_ui_clk;
+ assign wr_clk = c1_ui_clk;
+  assign        wr_en=(fenliu_stream_flag==1)? c1_app_rd_data_valid: c0_app_rd_data_valid;
+ // assign        rd_en=(!empty);
+ assign			rd_en = ddr3_rd_en;
+  assign        din=  (fenliu_stream_flag==1)? c1_app_rd_data: c0_app_rd_data;  
+                                                                                    
+        //两片DDR3颗粒读出数据的抓出                        
+ila_5 readdata_c0_c1 (                              
+	    .clk(c1_ui_clk), // input wire clk            
+	    .probe0({                                     
+	        c0_app_rd_data_valid,                     
+	        c1_app_rd_data_valid,                     
+	        wr_en,
+	        empty,
+	        rd_en,
+	//        prog_full,
+	  //      wr_data_count,
+	//        rd_data_count,
+	        fenliu_stream_flag,
+	        valid_DDR3_downfifo
+	        
+	                                 
+	    }), // input wire [30:0]  probe0              
+	    .probe1({                                     
+	         c0_app_rd_data[31:0],                    
+	         c1_app_rd_data[31:0],
+	         din[31:0],
+	         app_rd_data_to_pcie[127:0]                    
+	                                                  
+	    }) // input wire [79:0]  probe1               
+);                                                  
+                                                    
+ 
+// ila_6 fifo (                              
+//	    .clk(clk_100M), // input wire clk            
+//	    .probe0({                                     
+//	        c0_app_rd_data_valid,                     
+//	        c1_app_rd_data_valid,                     
+//	        wr_en,
+//	        empty,
+//	        rd_en,
+//	        fenliu_stream_flag,
+//	        valid_DDR3_downfifo
+//	        
+//	                                 
+//	    }), // input wire [30:0]  probe0              
+//	    .probe1({                                     
+//	         c0_app_rd_data[31:0],                    
+//	         c1_app_rd_data[31:0],
+//	         din[31:0],
+//	         app_rd_data_to_pcie[127:0]                    
+//	                                                  
+//	    }) // input wire [79:0]  probe1               
+//);                                                  
+    
+ 
+ 
+                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+                                                                                    
+endmodule

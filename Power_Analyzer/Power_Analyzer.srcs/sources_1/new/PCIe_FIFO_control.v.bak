@@ -1,0 +1,123 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2018/05/28 11:26:30
+// Design Name: 
+// Module Name: PCIe_FIFO_control
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module PCIe_FIFO_control(
+		
+		input          clk_100M,
+		input          rst_trans_fifo, 
+    input          pc_dma_read_en,
+	  input          pc_dma_read_en_ddr,	
+		input [4:0]    trans_id,               //trans_id表示传输的数据源，示波模式/DDR3/其他
+		
+		//PCIe FIFO端口
+		output ddr_rd_en,
+		output [127:0] tx_fifo_in_data,
+		output         tx_fifo_wr_en,
+		input [127:0]ddr_fifo_dout_8ch,
+		input             ddr_fifo_valid,
+		input             ddr_fifo_empty,
+		input          pcie_wr_fifo_full,
+		input          pcie_prog_full
+
+
+    );
+  
+  reg [127:0] tx_fifo_in_data;
+  reg         tx_fifo_wr_en; 
+  reg ddr_rd_en;
+  reg pcie_prog_full_r1;
+  
+  always @(posedge clk_100M)
+  begin
+  	if(!rst_trans_fifo)
+  	begin
+  		pcie_prog_full_r1 <= 1'b1;
+  	end
+  else
+  	pcie_prog_full_r1 <= pcie_prog_full;
+ end
+
+    
+  
+  always @(posedge clk_100M )
+	begin
+		if(!rst_trans_fifo)
+			begin	
+//				fifo_rd_s0 <= 1'b0;
+				tx_fifo_wr_en <= 1'b0;
+				tx_fifo_in_data <= 128'b0;
+								
+			end
+		else
+			begin	
+				case(trans_id)
+					5'd1 :                          //为1时，传输示波模式的数据
+						begin	
+						end
+					5'd2 :                         //为2时，传输功率模式的数据
+						begin
+						end
+					5'd3 :                      //为3时，启用ddr3实时传输数据缓存
+						begin
+							ddr_rd_en <= pc_dma_read_en & (!ddr_fifo_empty)&(!pcie_prog_full);
+							tx_fifo_wr_en <= pc_dma_read_en &ddr_fifo_valid&(!pcie_wr_fifo_full) ;
+							tx_fifo_in_data <= ddr_fifo_dout_8ch;
+					
+						end
+					5'd4 : 
+						begin
+			
+						end
+					5'd5 : 
+						begin
+						
+						end
+					5'd6 : 
+						begin
+						
+						end
+					5'd7 : 
+						begin
+						
+						end
+					5'd8 : 
+						begin
+						
+						end
+					default: 
+					  begin
+//							fifo_rd_s0 <= 1'b0;
+							tx_fifo_wr_en <= 1'b0;
+				    	tx_fifo_in_data <= 128'b0;	
+				    end
+				endcase				
+			end	
+	end
+    
+    
+    
+    
+    
+    
+    
+    
+endmodule

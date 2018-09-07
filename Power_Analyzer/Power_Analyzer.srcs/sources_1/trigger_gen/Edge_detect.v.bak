@@ -1,0 +1,54 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    14:16:43 11/02/2016 
+// Design Name: 
+// Module Name:    Edge_detect 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module Edge_detect(
+	input		[15:0]		nomal_data,
+	input					rst_n,
+	input					edge_clk,
+	
+	output		[15:0]		rise_edge,
+	output		[15:0]		fall_edge,
+	output		[15:0]		rise_or_fall_edge
+    );
+    
+    wire		[15:0]		nomal_data;
+    
+    wire        [15:0]		rise_edge;
+    wire		[15:0]		fall_edge;
+    wire        [15:0]		rise_or_fall_edge;
+    
+rise_edge_detect rise_edge_detect_inst(
+	.data_in(nomal_data),
+	.rst_n(rst_n),
+	.rise_edge_clk(edge_clk),
+	
+	.edge_pulse(rise_edge)
+    );
+
+rise_edge_detect fall_edge_detect_inst(
+	.data_in(~nomal_data),
+	.rst_n(rst_n),
+	.rise_edge_clk(edge_clk),
+	
+	.edge_pulse(fall_edge)
+    );
+
+assign rise_or_fall_edge = (rise_edge|fall_edge);
+endmodule
